@@ -161,7 +161,6 @@ class ContactsClient(BaseClient):
         offset = 0
         query_limit = 100  # Max value according to docs
         limited = limit > 0
-        include_history = options.get("include_history", False)
         if limited and limit < query_limit:
             query_limit = limit
         while not finished:
@@ -175,7 +174,6 @@ class ContactsClient(BaseClient):
                 self.get_batch(
                     [contact["vid"] for contact in batch["contacts"]],
                     extra_properties=extra_properties,
-                    include_history=include_history
                 )
             )
             finished = not batch["has-more"] or (limited and len(output) >= limit)
@@ -255,6 +253,8 @@ class ContactsClient(BaseClient):
             if vid_offset and time_offset:
                 params["vidOffset"] = vid_offset
                 params["timeOffset"] = time_offset
+            if options.get("include_history"):
+                params["propertyMode"] = 'value_and_history'
             batch = self._call(
                 "lists/{}/contacts/all".format(list_id),
                 method="GET",
