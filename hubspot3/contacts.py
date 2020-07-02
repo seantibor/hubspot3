@@ -128,7 +128,7 @@ class ContactsClient(BaseClient):
 
         params = {"vid": ids, "property": list(properties)}
         if include_history:
-            params['propertyMode'] = "values_and_history"
+            params['propertyMode'] = "value_and_history"
 
         batch = self._call(
             "contact/vids/batch",
