@@ -236,6 +236,7 @@ class ContactsClient(BaseClient):
         limit: int = 100,
         vid_offset: int = 0,
         time_offset: int = 0,
+        extra_properties: Union[list, str] = None,
         **options
     ) -> List[Dict]:
         """
@@ -248,8 +249,17 @@ class ContactsClient(BaseClient):
         if limited and limit < query_limit:
             query_limit = limit
 
+        properties = set(self.default_batch_properties)
+
+        # append extras if they exist
+        if extra_properties:
+            if isinstance(extra_properties, list):
+                properties.update(extra_properties)
+            if isinstance(extra_properties, str):
+                properties.add(extra_properties)
+
         while not finished:
-            params = {"count": query_limit}
+            params = {"count": query_limit, "property": list(properties)}
             if vid_offset and time_offset:
                 params["vidOffset"] = vid_offset
                 params["timeOffset"] = time_offset
