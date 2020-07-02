@@ -114,7 +114,7 @@ class ContactsClient(BaseClient):
         "associatedcompanyid",
     ]
 
-    def get_batch(self, ids, extra_properties: Union[list, str] = None):
+    def get_batch(self, ids, extra_properties: Union[list, str] = None, include_history: bool = False):
         """given a batch of vids, get more of their info"""
         # default properties to fetch
         properties = set(self.default_batch_properties)
@@ -126,11 +126,15 @@ class ContactsClient(BaseClient):
             if isinstance(extra_properties, str):
                 properties.add(extra_properties)
 
+        params = {"vid": ids, "property": list(properties)}
+        if include_history:
+            params['propertyMode'] = "values_and_history"
+
         batch = self._call(
             "contact/vids/batch",
             method="GET",
             doseq=True,
-            params={"vid": ids, "property": list(properties)},
+            params=params,
         )
         # It returns a dict with IDs as keys
         return [prettify(batch[contact], id_key="vid") for contact in batch]
@@ -157,6 +161,7 @@ class ContactsClient(BaseClient):
         offset = 0
         query_limit = 100  # Max value according to docs
         limited = limit > 0
+        include_history = options.get("include_history", False)
         if limited and limit < query_limit:
             query_limit = limit
         while not finished:
@@ -170,6 +175,7 @@ class ContactsClient(BaseClient):
                 self.get_batch(
                     [contact["vid"] for contact in batch["contacts"]],
                     extra_properties=extra_properties,
+                    include_history=include_history
                 )
             )
             finished = not batch["has-more"] or (limited and len(output) >= limit)
